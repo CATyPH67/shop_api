@@ -1,16 +1,10 @@
-fake_users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
-        "hashed_password": "fakehashedsecret",
-        "disabled": False,
-    },
-    "alice": {
-        "username": "alice",
-        "full_name": "Alice Wonderson",
-        "email": "alice@example.com",
-        "hashed_password": "fakehashedsecret2",
-        "disabled": True,
-    },
-}
+from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine, async_sessionmaker
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from app.config import DATABASE_URL
+
+engine = create_async_engine(DATABASE_URL)
+
+async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
+
+class Base(AsyncAttrs, DeclarativeBase):
+    pass__abstract__ = True

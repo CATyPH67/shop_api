@@ -4,3 +4,7 @@ python-multipart
 pyjwt
 passlib
 bcrypt
+alembic 
+asyncpg 
+sqlalchemy 
+pydantic-settings
