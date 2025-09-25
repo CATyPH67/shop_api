@@ -27,7 +27,3 @@ app.include_router(products.router)
 app.include_router(categories.router)
 app.include_router(cart.router)
 app.include_router(order.router)
-
-@app.get("/items/")
-async def read_items(token: Annotated[str, Depends(oauth2_scheme)]):
-    return {"token": token}
