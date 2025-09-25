@@ -4,10 +4,11 @@ from sqlalchemy import select, asc, desc
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import Product, Category, product_category
-from app.db.database import async_session_maker, get_session
+from app.db.database import get_session
 from app.pydantic_models import ProductOut
 
 router = APIRouter(prefix="", tags=["products"])
+
 
 @router.post("/products", response_model=List[ProductOut])
 async def get_products(

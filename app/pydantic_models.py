@@ -28,6 +28,16 @@ class ProductOut(BaseModel):
     size: str
     categories: List[str]
 
+# Category
+class CategoryOut(BaseModel):
+    id: int
+    name: str
+    parent_id: Optional[int]
+    subcategories: List["CategoryOut"] = []
+
+    class Config:
+        orm_mode = True
+
 # Cart
 class CartItemIn(BaseModel):
     product_id: int

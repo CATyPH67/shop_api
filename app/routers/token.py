@@ -8,6 +8,7 @@ from app.users.auth import authenticate_user, create_access_token, fake_users_db
 
 router = APIRouter(tags=["token"])
 
+
 @router.post("/token")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
