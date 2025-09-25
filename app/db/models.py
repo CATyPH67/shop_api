@@ -1,5 +1,5 @@
 from typing import List, Optional
-from sqlalchemy import TEXT, String, Integer, Float, ForeignKey, Table, Column, DateTime, func
+from sqlalchemy import TEXT, String, Integer, ForeignKey, Table, Column, DateTime, Numeric, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .database import Base
 from datetime import datetime
@@ -55,7 +55,7 @@ class Product(Base):
     name: Mapped[str] = mapped_column(String(100))
     description: Mapped[str] = mapped_column(TEXT)
     image: Mapped[str] = mapped_column(String(100))
-    price: Mapped[float] = mapped_column(Float)
+    price: Mapped[Numeric] = mapped_column(Numeric)
 
     size_id: Mapped[int] = mapped_column(ForeignKey("sizes.id"))
     size: Mapped["Size"] = relationship(back_populates="products")
@@ -74,7 +74,7 @@ class Cart(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
-    total_price: Mapped[float] = mapped_column(Float, default=0.0)
+    total_price: Mapped[Numeric] = mapped_column(Numeric, default=0.0)
     total_quantity: Mapped[int] = mapped_column(Integer, default=0)
 
     user: Mapped["User"] = relationship(back_populates="cart")
@@ -88,7 +88,7 @@ class CartItem(Base):
     cart_id: Mapped[int] = mapped_column(ForeignKey("carts.id"))
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
     quantity: Mapped[int] = mapped_column(Integer, default=1)
-    price: Mapped[float] = mapped_column(Float)  # цена товара на момент добавления
+    price: Mapped[Numeric] = mapped_column(Numeric)  # цена товара на момент добавления
 
     cart: Mapped["Cart"] = relationship(back_populates="items")
     product: Mapped["Product"] = relationship(back_populates="cart_items")
@@ -99,7 +99,7 @@ class Order(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    total_price: Mapped[float] = mapped_column(Float)
+    total_price: Mapped[Numeric] = mapped_column(Numeric)
     total_quantity: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -114,7 +114,7 @@ class OrderItem(Base):
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
     quantity: Mapped[int] = mapped_column(Integer, default=1)
-    price: Mapped[float] = mapped_column(Float)  # цена товара на момент покупки
+    price: Mapped[Numeric] = mapped_column(Numeric)  # цена товара на момент покупки
 
     order: Mapped["Order"] = relationship(back_populates="items")
     product: Mapped["Product"] = relationship(back_populates="order_items")
