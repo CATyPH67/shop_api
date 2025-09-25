@@ -44,7 +44,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
             raise credentials_exception
     except jwt.InvalidTokenError:
         raise credentials_exception
-    user = await UsersDAO.find_one_or_none(id=payload["sub"])
+    user = await UsersDAO.find_one_or_none(id=int(payload["sub"]))
     if user is None:
         raise credentials_exception
     return user
