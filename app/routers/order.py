@@ -1,11 +1,12 @@
 # app/routers/order.py
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.db.database import get_session
 from app.db.models import Cart, CartItem, Order, OrderItem
 from app.pydantic_models import OrderItemOut, OrderOut
+from app.services.email import send_email
 from app.users.auth import get_current_user
 
 router = APIRouter(prefix="/order", tags=["Order"])
@@ -13,6 +14,7 @@ router = APIRouter(prefix="/order", tags=["Order"])
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=OrderOut)
 async def create_order(
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
     user=Depends(get_current_user),
 ):
@@ -52,6 +54,19 @@ async def create_order(
     cart.total_quantity = 0
 
     await session.commit()
+
+    # Отправка письма через fastapi-mail в фоне
+    background_tasks.add_task(
+        send_email,
+        user.email,
+        "Ваш заказ принят",
+        f"""
+        <h2>Спасибо за заказ!</h2>
+        <p>Номер заказа: {order.id}</p>
+        <p>Дата: {order.created_at.strftime('%Y-%m-%d %H:%M')}</p>
+        <p>Сумма: {order.total_price} руб.</p>
+        """
+    )
 
     return OrderOut(
         id=order.id,

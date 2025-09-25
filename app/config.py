@@ -1,12 +1,28 @@
+from pydantic import EmailStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from datetime import timedelta
-from dotenv import load_dotenv
-import os
 
-load_dotenv()
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+    # настройка базы данных
+    DATABASE_URL: str
+    
+    # настройка токена
+    SECRET_KEY: str = "secret"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
-SECRET_KEY = os.getenv("SECRET_KEY", "secret")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
-ACCESS_TOKEN_EXPIRE = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    @property
+    def access_token_expire(self) -> timedelta:
+        return timedelta(minutes=self.ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    #настройка SMTP
+    SMTP_HOST: str
+    SMTP_PORT: int
+    SMTP_USER: str
+    SMTP_PASSWORD: str
+    EMAILS_FROM_EMAIL: EmailStr
+    EMAILS_FROM_NAME: str = "Shop API"
+
+settings = Settings()
