@@ -10,3 +10,6 @@ sqlalchemy
 pydantic-settings
 pydantic[email]
 fastapi-mail
+authlib
+httpx
+itsdangerous

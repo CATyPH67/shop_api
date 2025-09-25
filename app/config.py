@@ -17,12 +17,17 @@ class Settings(BaseSettings):
     def access_token_expire(self) -> timedelta:
         return timedelta(minutes=self.ACCESS_TOKEN_EXPIRE_MINUTES)
     
-    #настройка SMTP
+    # настройка SMTP
     SMTP_HOST: str
     SMTP_PORT: int
     SMTP_USER: str
     SMTP_PASSWORD: str
     EMAILS_FROM_EMAIL: EmailStr
     EMAILS_FROM_NAME: str = "Shop API"
+
+    # настройка авторизации и регистрации яндекс
+    YANDEX_CLIENT_ID: str
+    YANDEX_CLIENT_SECRET: str
+    YANDEX_REDIRECT_URI: str
 
 settings = Settings()

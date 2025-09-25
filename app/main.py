@@ -3,8 +3,12 @@ from fastapi import Depends, FastAPI
 from app.users.auth import oauth2_scheme
 from app.routers import auth, cart, categories, order, products
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+from app.config import settings
 
 app = FastAPI()
+
+app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
 # разрешение для cors
 origins = [
