@@ -33,5 +33,12 @@ services:
       - "8080:80"
     restart: always
 
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"   # SMTP порт
+      - "8025:8025"   # веб-интерфейс
+
 volumes:
   postgres_data:
