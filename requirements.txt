@@ -2,8 +2,8 @@ fastapi
 uvicorn[standard]
 python-multipart
 pyjwt
-passlib
-bcrypt
+bcrypt==4.3.0
+passlib[bcrypt]==1.7.4
 alembic 
 asyncpg 
 sqlalchemy 
