@@ -1,4 +1,3 @@
-# app/routers/cart.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import List

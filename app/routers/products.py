@@ -1,4 +1,3 @@
-# app/routers/products.py
 from fastapi import APIRouter, Depends, Query, HTTPException
 from typing import List, Optional
 from sqlalchemy import select, asc, desc

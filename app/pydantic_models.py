@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, EmailStr
 
@@ -45,3 +46,24 @@ class CartOut(BaseModel):
     total_price: float
     total_quantity: int
     items: List[CartItemOut]
+
+# Order
+class OrderItemOut(BaseModel):
+    id: int
+    product_id: int
+    quantity: int
+    price: float
+
+    class Config:
+        orm_mode = True
+
+
+class OrderOut(BaseModel):
+    id: int
+    total_price: float
+    total_quantity: int
+    created_at: datetime
+    items: List[OrderItemOut]
+
+    class Config:
+        orm_mode = True
