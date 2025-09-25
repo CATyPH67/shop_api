@@ -11,7 +11,7 @@ from app.users.auth import get_current_user
 router = APIRouter(prefix="/order", tags=["Order"])
 
 
-@router.post("/", status_code=201, response_model=OrderOut)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=OrderOut)
 async def create_order(
     session: AsyncSession = Depends(get_session),
     user=Depends(get_current_user),
@@ -22,7 +22,7 @@ async def create_order(
     cart = result.scalars().first()
 
     if not cart or not cart.items:
-        raise HTTPException(status_code=400, detail="Корзина пуста")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Корзина пуста")
 
     order = Order(
         user_id=user.id,

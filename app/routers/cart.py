@@ -48,7 +48,7 @@ async def get_cart(
     )
 
 
-@router.post("/", status_code=201, response_model=CartOut)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=CartOut)
 async def add_to_cart(
     payload: CartItemIn,
     session: AsyncSession = Depends(get_session),
@@ -56,7 +56,7 @@ async def add_to_cart(
 ):
     product = await session.get(Product, payload.product_id)
     if product is None:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
     result = await session.execute(
         select(Cart)
@@ -122,7 +122,7 @@ async def update_cart_item(
     )
     cart = result.scalars().first()
     if cart is None:
-        raise HTTPException(status_code=404, detail="Cart not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cart not found")
 
     res_item = await session.execute(
         select(CartItem).where(CartItem.cart_id == cart.id, CartItem.product_id == payload.product_id)
@@ -130,14 +130,14 @@ async def update_cart_item(
     cart_item = res_item.scalars().first()
 
     if cart_item is None:
-        raise HTTPException(status_code=404, detail="Product not found in cart")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found in cart")
 
     if payload.quantity == 0:
         await session.delete(cart_item)
     else:
         product = await session.get(Product, payload.product_id)
         if product is None:
-            raise HTTPException(status_code=404, detail="Product not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
         cart_item.quantity = payload.quantity
         cart_item.price = product.price * payload.quantity
@@ -178,14 +178,14 @@ async def delete_cart_item(
     )
     cart = result.scalars().first()
     if cart is None:
-        raise HTTPException(status_code=404, detail="Cart not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cart not found")
 
     res_item = await session.execute(
         select(CartItem).where(CartItem.id == item_id, CartItem.cart_id == cart.id)
     )
     cart_item = res_item.scalars().first()
     if cart_item is None:
-        raise HTTPException(status_code=404, detail="Cart item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cart item not found")
 
     await session.delete(cart_item)
 

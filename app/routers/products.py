@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, status
 from typing import List, Optional
 from sqlalchemy import select, asc, desc
 from sqlalchemy.orm import joinedload
@@ -56,7 +56,7 @@ async def get_product(product_id: int, session: AsyncSession = Depends(get_sessi
     )
     p = res.unique().scalar_one_or_none()
     if not p:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     cat_names = [c.name for c in p.categories]
     size_name = p.size.name if p.size else None
     return ProductOut(

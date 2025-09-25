@@ -6,7 +6,7 @@ from app.users.dao import UsersDAO
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-@router.post("/register/", status_code=201)
+@router.post("/register/", status_code=status.HTTP_201_CREATED)
 async def register_user(user_data: SUserRegister) -> SUserInDB:
 # async def register_user(form_data: OAuth2PasswordRequestForm = Depends()) -> SUserInDB:
     exists = await UsersDAO.find_one_or_none(email=user_data.email)
