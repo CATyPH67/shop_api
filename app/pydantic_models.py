@@ -1,3 +1,4 @@
+from typing import List, Optional
 from pydantic import BaseModel, EmailStr
 
 # user
@@ -15,3 +16,13 @@ class SUserInDB(User):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+# Product
+class ProductOut(BaseModel):
+    id: int
+    name: str
+    description: str
+    image: str
+    price: float
+    size: str
+    categories: List[str]

@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import Depends, FastAPI
 from app.users.auth import oauth2_scheme
-from app.routers import auth
+from app.routers import auth, products
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -19,6 +19,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(products.router)
 
 @app.get("/items/")
 async def read_items(token: Annotated[str, Depends(oauth2_scheme)]):
