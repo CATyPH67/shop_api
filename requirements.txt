@@ -8,3 +8,4 @@ alembic
 asyncpg 
 sqlalchemy 
 pydantic-settings
+pydantic[email]
