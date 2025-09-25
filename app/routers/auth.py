@@ -27,5 +27,5 @@ async def login_for_token(form_data: OAuth2PasswordRequestForm = Depends()) -> T
     user = await UsersDAO.find_one_or_none(username=form_data.username)
     if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный email или пароль")
-    access_token = create_access_token({"sub": user.id})
+    access_token = create_access_token({"sub": str(user.id)})
     return Token(access_token=access_token, token_type="bearer")

@@ -26,3 +26,22 @@ class ProductOut(BaseModel):
     price: float
     size: str
     categories: List[str]
+
+# Cart
+class CartItemIn(BaseModel):
+    product_id: int
+    quantity: int
+
+
+class CartItemOut(BaseModel):
+    id: int
+    product_id: int
+    quantity: int
+    price: float
+
+
+class CartOut(BaseModel):
+    id: int
+    total_price: float
+    total_quantity: int
+    items: List[CartItemOut]
