@@ -33,4 +33,7 @@ class Settings(BaseSettings):
     # Настройка redis
     REDIS_DSN: str
 
+    # Настройка пагинации
+    LIMIT_MAXIMUM: int = 20
+
 settings = Settings()

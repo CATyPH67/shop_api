@@ -42,7 +42,6 @@ class Category(BaseModel):
     name: str
 class CategoryOut(Category):
     parent_id: Optional[int]
-    subcategories: List["CategoryOut"] = []
 
     class Config:
         orm_mode = True
@@ -84,3 +83,20 @@ class OrderOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+# Pagination
+from pydantic import BaseModel
+from typing import List, Optional
+
+class PaginationMeta(BaseModel):
+    limit: int
+    offset: int
+    has_next: bool
+
+class PaginatedProducts(BaseModel):
+    items: List[ProductOut]
+    meta: PaginationMeta
+
+class PaginatedCategories(BaseModel):
+    items: List[CategoryOut]
+    meta: PaginationMeta

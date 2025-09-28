@@ -1,3 +1,4 @@
+import json
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,6 +6,8 @@ from starlette.middleware.sessions import SessionMiddleware
 from contextlib import asynccontextmanager
 import redis.asyncio as redis
 from fastapi_limiter import FastAPILimiter
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_cache import FastAPICache
 
 from app.routers import auth, cart, categories, order, products
 from app.config.settings_config import settings 
@@ -13,13 +16,23 @@ from app.config.logging_config import logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    redis_conn = redis.from_url(settings.REDIS_DSN, encoding="utf-8", decode_responses=True)
+    redis_conn = redis.from_url(settings.REDIS_DSN)
+
+    # rate limiter
     await FastAPILimiter.init(redis_conn)
-    logger.info("FastAPI app started, Redis and RateLimiter initialized")
 
-    yield  # тут приложение работает
+    # кэш с явной сериализацией в байты
+    FastAPICache.init(
+        RedisBackend(
+            redis_conn,
+        ),
+        prefix="shop-cache"
+    )
 
+    logger.info("FastAPI app started, Redis, RateLimiter and Cache initialized")
+    yield
     await FastAPILimiter.close()
+    await redis_conn.close()  # обязательно закрываем соединение
     logger.info("FastAPI app shutdown, Redis connection closed")
 
 

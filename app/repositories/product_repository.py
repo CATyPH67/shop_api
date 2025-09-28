@@ -51,26 +51,51 @@ class ProductRepository:
         min_price: float | None,
         max_price: float | None,
         sort: str | None,
-    ) -> list[Product]:
+        limit: int,
+        offset: int,
+    ) -> tuple[list[Product], bool]:
         q = (
-            select(Product)
+            select(Product.id)
             .join(product_category, Product.id == product_category.c.product_id)
             .join(Category, Category.id == product_category.c.category_id)
             .where(Category.id == category_id)
-            .options(joinedload(Product.categories), joinedload(Product.size))
         )
 
         if min_price is not None:
             q = q.where(Product.price >= min_price)
         if max_price is not None:
             q = q.where(Product.price <= max_price)
+
         if sort == "price_asc":
-            q = q.order_by(Product.price.asc())
+            q = q.order_by(Product.price.asc(), Product.id.asc())
         elif sort == "price_desc":
-            q = q.order_by(Product.price.desc())
+            q = q.order_by(Product.price.desc(), Product.id.desc())
+        else:
+            q = q.order_by(Product.id.asc())
+
+        q = q.limit(limit + 1).offset(offset)
 
         res = await self.session.execute(q)
-        return res.scalars().unique().all()
+        ids = res.scalars().all()
+
+        has_next = len(ids) > limit
+        ids = ids[:limit]
+
+        if not ids:
+            return [], has_next
+
+        q2 = (
+            select(Product)
+            .where(Product.id.in_(ids))
+            .options(joinedload(Product.categories), joinedload(Product.size))
+        )
+        res2 = await self.session.execute(q2)
+        prods = res2.scalars().unique().all()
+
+        prod_map = {p.id: p for p in prods}
+        ordered = [prod_map[i] for i in ids if i in prod_map]
+
+        return ordered, has_next
 
     async def get_by_id(self, product_id: int) -> Product | None:
         res = await self.session.execute(
