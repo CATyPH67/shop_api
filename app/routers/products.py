@@ -1,14 +1,11 @@
 from fastapi import APIRouter, Depends, Query, status
-from typing import List, Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.config.rate_limits_config import limit
-from app.db.database import get_session
+from typing import Optional
 from app.dependencies.products_dependencies import get_product_service
-from app.repositories.product_repository import ProductRepository
 from app.services.product_service import ProductService
 from app.pydantic_models import PaginatedProducts, ProductIn, ProductOut
-from app.users.auth import get_current_admin
+from app.dependencies.auth_dependencies import get_current_admin
 from app.config.settings_config import settings
+from app.utils.rate_limit import rate_limit
 
 router = APIRouter(prefix="", tags=["products"])
 
@@ -16,7 +13,7 @@ router = APIRouter(prefix="", tags=["products"])
     "/product",
     response_model=ProductOut,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(limit("MEDIUM")), Depends(get_current_admin)]
+    dependencies=[Depends(rate_limit("MEDIUM")), Depends(get_current_admin)]
 )
 async def create_product(
     payload: ProductIn,
@@ -28,7 +25,7 @@ async def create_product(
 @router.post(
     "/products",
     response_model=PaginatedProducts,
-    dependencies=[Depends(limit("OFTEN"))]
+    dependencies=[Depends(rate_limit("OFTEN"))]
 )
 async def get_products(
     category_id: int,
@@ -42,6 +39,6 @@ async def get_products(
     return await service.get_products(category_id, min_price, max_price, sort, limit, offset)
 
 
-@router.get("/product/{product_id}", response_model=ProductOut, dependencies=[Depends(limit("OFTEN"))])
+@router.get("/product/{product_id}", response_model=ProductOut, dependencies=[Depends(rate_limit("OFTEN"))])
 async def get_product(product_id: int, service: ProductService = Depends(get_product_service)):
     return await service.get_product(product_id)

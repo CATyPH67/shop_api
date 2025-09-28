@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, Query
-from app.config.rate_limits_config import limit
 from app.dependencies.categoties_dependencies import get_category_service
-from app.repositories.category_repository import CategoryRepository
 from app.services.category_service import CategoryService
 from app.pydantic_models import PaginatedCategories
 from app.config.settings_config import settings
+from app.utils.rate_limit import rate_limit
 
 router = APIRouter(prefix="", tags=["categories"])
 
@@ -12,7 +11,7 @@ router = APIRouter(prefix="", tags=["categories"])
 @router.get(
     "/categories",
     response_model=PaginatedCategories,
-    dependencies=[Depends(limit("OFTEN"))],
+    dependencies=[Depends(rate_limit("OFTEN"))],
 )
 async def get_categories(
     limit: int = Query(10, ge=1, le=settings.LIMIT_MAXIMUM),

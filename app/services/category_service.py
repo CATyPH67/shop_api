@@ -2,7 +2,7 @@ from app.repositories.category_repository import CategoryRepository
 from app.pydantic_models import CategoryOut, PaginatedCategories, PaginationMeta
 from app.config.logging_config import logger
 from fastapi_cache.decorator import cache
-from app.config.cache_config import key_builder
+from app.utils.cache_utils import key_builder
 
 
 class CategoryService:

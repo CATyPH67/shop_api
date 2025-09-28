@@ -5,7 +5,7 @@ from app.repositories.category_repository import CategoryRepository
 from app.pydantic_models import PaginatedProducts, PaginationMeta, ProductIn, ProductOut
 from app.config.logging_config import logger
 from fastapi_cache.decorator import cache
-from app.config.cache_config import key_builder
+from app.utils.cache_utils import key_builder
 
 class ProductService:
     def __init__(self, prodRepo: ProductRepository, sizeRepo: SizeRepository, categRepo: CategoryRepository):

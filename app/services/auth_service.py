@@ -2,12 +2,12 @@ import secrets
 from fastapi import HTTPException, status, BackgroundTasks, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from app.repositories.user_repository import UserRepository
-from app.users.auth import create_access_token, get_password_hash, verify_password
 from app.pydantic_models import SUserInDB, SUserRegister, Token
 from app.services.email_service import send_email
 from app.config.settings_config import settings
 from app.oauth import oauth
 from app.config.logging_config import logger
+from app.utils.security import create_access_token, get_password_hash, verify_password
 
 
 class AuthService:

@@ -1,4 +1,3 @@
-# app/config/cache_config.py
 from typing import Callable, Any
 
 from fastapi_cache import FastAPICache

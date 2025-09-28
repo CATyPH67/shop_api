@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from app.db.database import async_session_maker, engine, Base
 from app.db.models import Category, Size, Product, User
-from app.users.auth import get_password_hash
+from app.utils.security import get_password_hash  # ✅ заменили путь
 
 
 async def seed():
@@ -19,11 +19,16 @@ async def seed():
         if result.scalars().first():
             print("⚠️ Данные уже есть, пропускаем заполнение.")
             return
-        
+
         # --- Пользователь с ролью админ ---
         hashed_password = get_password_hash("admin")
-        user = User(username="admin", email="admin@example.com", password=hashed_password, role="admin")
-        session.add(user)
+        admin_user = User(
+            username="admin",
+            email="admin@example.com",
+            password=hashed_password,
+            role="admin",
+        )
+        session.add(admin_user)
 
         # --- Категории ---
         furs = Category(name="Меха", parent_id=None)
@@ -49,9 +54,6 @@ async def seed():
 
         await session.flush()  # чтобы появились id
 
-        all_categories = [furs, coats] + furs_children + coats_children
-        all_sizes = sizes
-
         # --- Продукты ---
         products = []
         for i in range(1, 101):
@@ -66,7 +68,7 @@ async def seed():
                 description=f"Описание товара {i}",
                 image=f"https://example.com/image_{i}.jpg",
                 price=random.randint(5000, 50000),
-                size=random.choice(all_sizes),
+                size=random.choice(sizes),
             )
 
             # Добавляем категории: родительская и дочерняя
