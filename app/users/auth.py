@@ -4,7 +4,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 import jwt
 from passlib.context import CryptContext
-from app.config import settings
+from app.config.settings_config import settings
+from app.config.logging_config import logger
 
 from app.users.dao import UsersDAO
 
@@ -48,3 +49,14 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     if user is None:
         raise credentials_exception
     return user
+
+def get_current_admin(user=Depends(get_current_user)):
+    if user.role != "admin":
+        logger.warning(
+                "Attempt without the admin role",
+                extra={"extra_fields": {"username": user.username}}
+            )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough rights"
+        )

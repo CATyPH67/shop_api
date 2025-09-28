@@ -2,7 +2,7 @@ fastapi
 uvicorn[standard]
 python-multipart
 pyjwt
-bcrypt==4.3.0
+bcrypt==4.0.1
 passlib[bcrypt]==1.7.4
 alembic 
 asyncpg 
@@ -13,3 +13,5 @@ fastapi-mail
 authlib
 httpx
 itsdangerous
+fastapi-limiter
+redis

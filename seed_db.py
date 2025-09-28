@@ -4,7 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.db.database import async_session_maker, engine, Base
-from app.db.models import Category, Size, Product
+from app.db.models import Category, Size, Product, User
+from app.users.auth import get_password_hash
 
 
 async def seed():
@@ -18,6 +19,11 @@ async def seed():
         if result.scalars().first():
             print("⚠️ Данные уже есть, пропускаем заполнение.")
             return
+        
+        # --- Пользователь с ролью админ ---
+        hashed_password = get_password_hash("admin")
+        user = User(username="admin", email="admin@example.com", password=hashed_password, role="admin")
+        session.add(user)
 
         # --- Категории ---
         furs = Category(name="Меха", parent_id=None)

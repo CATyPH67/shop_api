@@ -12,6 +12,7 @@ class SUserRegister(User):
 
 class SUserInDB(User):
     id: int
+    role: str
 
 # token
 class Token(BaseModel):
@@ -19,19 +20,27 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 # Product
-class ProductOut(BaseModel):
-    id: int
+
+class Product(BaseModel):
     name: str
     description: str
-    image: str
+    image: str 
     price: float
+
+class ProductIn(Product):
+    size_id: int
+    category_ids: List[int]
+
+class ProductOut(Product):
+    id: int
     size: str
     categories: List[str]
 
 # Category
-class CategoryOut(BaseModel):
+class Category(BaseModel):
     id: int
     name: str
+class CategoryOut(Category):
     parent_id: Optional[int]
     subcategories: List["CategoryOut"] = []
 
@@ -39,17 +48,15 @@ class CategoryOut(BaseModel):
         orm_mode = True
 
 # Cart
-class CartItemIn(BaseModel):
+class CartItem(BaseModel):
     product_id: int
     quantity: int
-
-
-class CartItemOut(BaseModel):
+class CartItemOut(CartItem):
     id: int
-    product_id: int
-    quantity: int
     price: float
 
+class CartItemFields(CartItem):
+    price: float
 
 class CartOut(BaseModel):
     id: int

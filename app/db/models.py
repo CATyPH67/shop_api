@@ -20,6 +20,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(50), unique=True)
     email: Mapped[str] = mapped_column(String(100), unique=True)
     password: Mapped[str] = mapped_column(String(255))
+    role = Column(String, default="user")  # "user" или "admin"
 
     cart: Mapped["Cart"] = relationship(back_populates="user", uselist=False)
     orders: Mapped[List["Order"]] = relationship(back_populates="user")

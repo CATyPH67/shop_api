@@ -1,85 +1,21 @@
-# app/routers/order.py
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+from app.config.rate_limits_config import limit
 from app.db.database import get_session
-from app.db.models import Cart, CartItem, Order, OrderItem
-from app.pydantic_models import OrderItemOut, OrderOut
-from app.services.email import send_email
 from app.users.auth import get_current_user
+from app.repositories.order_repository import OrderRepository
+from app.services.order_service import OrderService
+from app.pydantic_models import OrderOut
 
-router = APIRouter(prefix="/order", tags=["Order"])
+router = APIRouter(prefix="/order", tags=["order"])
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=OrderOut)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=OrderOut, dependencies=[Depends(limit("MEDIUM"))])
 async def create_order(
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
     user=Depends(get_current_user),
 ):
-    result = await session.execute(
-        select(Cart).options(selectinload(Cart.items)).where(Cart.user_id == user.id)
-    )
-    cart = result.scalars().first()
-
-    if not cart or not cart.items:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Корзина пуста")
-
-    order = Order(
-        user_id=user.id,
-        total_price=cart.total_price,
-        total_quantity=cart.total_quantity,
-    )
-    session.add(order)
-    await session.flush()
-
-    res_items = await session.execute(select(CartItem).where(CartItem.cart_id == cart.id))
-    items = res_items.scalars().all()
-
-    order_items = []
-    for ci in items:
-        oi = OrderItem(
-            order_id=order.id,
-            product_id=ci.product_id,
-            quantity=ci.quantity,
-            price=ci.price,
-        )
-        session.add(oi)
-        order_items.append(oi)
-
-    for ci in items:
-        await session.delete(ci)
-    cart.total_price = 0.0
-    cart.total_quantity = 0
-
-    await session.commit()
-
-    # Отправка письма через fastapi-mail в фоне
-    background_tasks.add_task(
-        send_email,
-        user.email,
-        "Ваш заказ принят",
-        f"""
-        <h2>Спасибо за заказ!</h2>
-        <p>Номер заказа: {order.id}</p>
-        <p>Дата: {order.created_at.strftime('%Y-%m-%d %H:%M')}</p>
-        <p>Сумма: {order.total_price} руб.</p>
-        """
-    )
-
-    return OrderOut(
-        id=order.id,
-        total_price=order.total_price,
-        total_quantity=order.total_quantity,
-        created_at=order.created_at,
-        items=[
-            OrderItemOut(
-                id=oi.id,
-                product_id=oi.product_id,
-                quantity=oi.quantity,
-                price=oi.price,
-            )
-            for oi in order_items
-        ],
-    )
+    repo = OrderRepository(session)
+    service = OrderService(repo)
+    return await service.create_order(user, background_tasks)

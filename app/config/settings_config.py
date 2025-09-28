@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     
     # настройка токена
-    SECRET_KEY: str = "secret"
+    SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
@@ -29,5 +29,8 @@ class Settings(BaseSettings):
     YANDEX_CLIENT_ID: str
     YANDEX_CLIENT_SECRET: str
     YANDEX_REDIRECT_URI: str
+
+    # Настройка redis
+    REDIS_DSN: str
 
 settings = Settings()

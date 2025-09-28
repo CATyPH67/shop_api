@@ -1,69 +1,45 @@
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi import APIRouter, Depends, Query, status
 from typing import List, Optional
-from sqlalchemy import select, asc, desc
-from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.models import Product, Category, product_category
+from app.config.rate_limits_config import limit
 from app.db.database import get_session
-from app.pydantic_models import ProductOut
+from app.repositories.product_repository import ProductRepository
+from app.services.product_service import ProductService
+from app.pydantic_models import ProductIn, ProductOut
+from app.users.auth import get_current_admin
 
 router = APIRouter(prefix="", tags=["products"])
 
+@router.post(
+    "/product",
+    response_model=ProductOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(limit("MEDIUM")), Depends(get_current_admin)]
+)
+async def create_product(
+    payload: ProductIn,
+    session: AsyncSession = Depends(get_session),
+):
+    repo = ProductRepository(session)
+    service = ProductService(repo)
+    return await service.create_product(payload)
 
-@router.post("/products", response_model=List[ProductOut])
+
+@router.post("/products", response_model=List[ProductOut], dependencies=[Depends(limit("OFTEN"))])
 async def get_products(
     category_id: int,
     min_price: Optional[float] = Query(None),
     max_price: Optional[float] = Query(None),
-    sort: Optional[str] = Query(None),  # "price_asc" or "price_desc"
-    session: AsyncSession = Depends(get_session)
+    sort: Optional[str] = Query(None),
+    session: AsyncSession = Depends(get_session),
 ):
-    q = (
-        select(Product)
-        .join(product_category, Product.id == product_category.c.product_id)
-        .join(Category, Category.id == product_category.c.category_id)
-        .where(Category.id == category_id)
-        .options(joinedload(Product.categories), joinedload(Product.size))
-    )   
+    repo = ProductRepository(session)
+    service = ProductService(repo)
+    return await service.get_products(category_id, min_price, max_price, sort)
 
-    if min_price is not None:
-        q = q.where(Product.price >= min_price)
-    if max_price is not None:
-        q = q.where(Product.price <= max_price)
-    if sort == "price_asc":
-        q = q.order_by(asc(Product.price))
-    elif sort == "price_desc":
-        q = q.order_by(desc(Product.price))
 
-    res = await session.execute(q)
-    prods = res.scalars().unique().all()
-
-    out = []
-    for p in prods:
-        cat_names = [c.name for c in p.categories]
-        size_name = p.size.name if p.size else None
-        out.append(ProductOut(
-            id=p.id, name=p.name, description=p.description,
-            image=p.image, price=p.price, size=size_name, categories=cat_names
-        ))
-    return out
-
-@router.get("/product/{product_id}", response_model=ProductOut)
+@router.get("/product/{product_id}", response_model=ProductOut, dependencies=[Depends(limit("OFTEN"))])
 async def get_product(product_id: int, session: AsyncSession = Depends(get_session)):
-    res = await session.execute(
-        select(Product)
-        .options(joinedload(Product.categories), joinedload(Product.size))
-        .where(Product.id == product_id)
-    )
-    p = res.unique().scalar_one_or_none()
-    if not p:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
-    cat_names = [c.name for c in p.categories]
-    size_name = p.size.name if p.size else None
-    return ProductOut(
-        id=p.id, name=p.name, 
-        description=p.description,
-        image=p.image, 
-        price=p.price, size=size_name, 
-        categories=cat_names
-    )
+    repo = ProductRepository(session)
+    service = ProductService(repo)
+    return await service.get_product(product_id)
