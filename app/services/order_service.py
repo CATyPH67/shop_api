@@ -1,24 +1,26 @@
 from fastapi import HTTPException, status
 from app.repositories.order_repository import OrderRepository
+from app.repositories.cart_repository import CartRepository
 from app.pydantic_models import OrderOut, OrderItemOut
 from app.services.email_service import send_email
 from app.config.logging_config import logger
 
 
 class OrderService:
-    def __init__(self, repo: OrderRepository):
-        self.repo = repo
+    def __init__(self, orderRepo: OrderRepository, cartRepo: CartRepository):
+        self.orderRepo = orderRepo
+        self.cartRepo = cartRepo
 
     async def create_order(self, user, background_tasks) -> OrderOut:
         logger.info("Creating order", extra={"extra_fields": {"user_id": str(user.id)}})
         
-        cart = await self.repo.get_cart_with_items(user.id)
+        cart = await self.cartRepo.get_cart_with_items(user.id)
         if not cart or not cart.items:
             logger.warning("Cart is empty", extra={"extra_fields": {"user_id": str(user.id)}})
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty")
 
-        order = await self.repo.create_order(user.id, cart.total_price, cart.total_quantity)
-        items = await self.repo.get_cart_items(cart.id)
+        order = await self.orderRepo.create_order(user.id, cart.total_price, cart.total_quantity)
+        items = await self.cartRepo.get_items(cart.id) # cart
 
         logger.info(
             "Order created in DB",
@@ -27,11 +29,11 @@ class OrderService:
 
         order_items = []
         for ci in items:
-            oi = await self.repo.add_order_item(order.id, ci.product_id, ci.quantity, ci.price)
+            oi = await self.orderRepo.add_order_item(order.id, ci.product_id, ci.quantity, ci.price)
             order_items.append(oi)
 
-        await self.repo.clear_cart(cart, items)
-        await self.repo.commit()
+        await self.cartRepo.clear_cart(cart, items)
+        await self.orderRepo.commit()
 
         logger.info(
             "Cart cleared after order creation",

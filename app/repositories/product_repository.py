@@ -1,21 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
-from app.db.models import Product, Category, Size, product_category
+from app.db.models import Category, Product, Size, product_category
 from sqlalchemy.orm import selectinload
 
 
 class ProductRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
-
-    async def get_size_by_id(self, size_id: int) -> Size | None:
-        result = await self.session.execute(select(Size).where(Size.id == size_id))
-        return result.scalar_one_or_none()
-
-    async def get_categories_by_ids(self, category_ids: list[int]) -> list[Category]:
-        result = await self.session.execute(select(Category).where(Category.id.in_(category_ids)))
-        return result.scalars().all()
 
     async def create_product(
         self,
@@ -97,10 +89,16 @@ class ProductRepository:
 
         return ordered, has_next
 
-    async def get_by_id(self, product_id: int) -> Product | None:
+    async def get_product_joined(self, product_id: int) -> Product | None:
         res = await self.session.execute(
             select(Product)
             .options(joinedload(Product.categories), joinedload(Product.size))
             .where(Product.id == product_id)
         )
         return res.unique().scalar_one_or_none()
+    
+    async def get_product(self, product_id: int) -> Product | None:
+        result = await self.session.execute(
+            select(Product).where(Product.id == product_id)
+        )
+        return result.scalar_one_or_none()

@@ -11,8 +11,8 @@ from app.config.logging_config import logger
 
 
 class AuthService:
-    def __init__(self, repo: UserRepository):
-        self.repo = repo
+    def __init__(self, userRepo: UserRepository):
+        self.userRepo = userRepo
 
     async def register_user(self, user_data: SUserRegister) -> SUserInDB:
         logger.info(
@@ -20,14 +20,14 @@ class AuthService:
             extra={"extra_fields": {"username": user_data.username, "email": user_data.email}}
         )
 
-        if await self.repo.get_by_email(user_data.email):
+        if await self.userRepo.get_by_email(user_data.email):
             logger.warning(
                 "Registration failed: email already exists",
                 extra={"extra_fields": {"email": user_data.email}}
             )
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User with that email already exist")
 
-        if await self.repo.get_by_username(user_data.username):
+        if await self.userRepo.get_by_username(user_data.username):
             logger.warning(
                 "Registration failed: username already exists",
                 extra={"extra_fields": {"username": user_data.username}}
@@ -35,7 +35,7 @@ class AuthService:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User with that name already exist")
 
         hashed_password = get_password_hash(user_data.password)
-        user = await self.repo.add_user(user_data.username, user_data.email, hashed_password)
+        user = await self.userRepo.add_user(user_data.username, user_data.email, hashed_password)
         logger.info(
             "User registered successfully",
             extra={"extra_fields": {"user_id": user.id, "username": user.username, "email": user.email}}
@@ -48,7 +48,7 @@ class AuthService:
             extra={"extra_fields": {"username": form_data.username}}
         )
 
-        user = await self.repo.get_by_username(form_data.username)
+        user = await self.userRepo.get_by_username(form_data.username)
         if not user:
             logger.warning(
                 "Login failed: username not found",
@@ -91,8 +91,8 @@ class AuthService:
                 )
                 raise HTTPException(status_code=400, detail="No mail received from Yandex")
 
-            user_by_email = await self.repo.get_by_email(yandex_email)
-            user_by_username = await self.repo.get_by_username(yandex_username)
+            user_by_email = await self.userRepo.get_by_email(yandex_email)
+            user_by_username = await self.userRepo.get_by_username(yandex_username)
 
             if user_by_email and user_by_email.username != yandex_username:
                 logger.warning(
@@ -111,7 +111,7 @@ class AuthService:
             if not user_by_email and not user_by_username:
                 generated_password = secrets.token_urlsafe(12)
                 hashed_password = get_password_hash(generated_password)
-                new_user = await self.repo.add_user(yandex_username, yandex_email, hashed_password)
+                new_user = await self.userRepo.add_user(yandex_username, yandex_email, hashed_password)
 
                 background_tasks.add_task(
                     send_email,

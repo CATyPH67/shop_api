@@ -6,14 +6,14 @@ from app.config.cache_config import key_builder
 
 
 class CategoryService:
-    def __init__(self, repo: CategoryRepository):
-        self.repo = repo
+    def __init__(self, cartRepo: CategoryRepository):
+        self.cartRepo = cartRepo
 
     @cache(expire=60, namespace="get_categories", key_builder=key_builder)
     async def get_categories(self, limit: int, offset: int) -> PaginatedCategories:
         logger.info("Fetching categories", extra={"extra_fields": {"limit": limit, "offset": offset}})
         try:
-            categories, has_next = await self.repo.get_all(limit, offset)
+            categories, has_next = await self.cartRepo.get_all(limit, offset)
 
             items = [
                 CategoryOut(id=c.id, name=c.name, parent_id=c.parent_id)

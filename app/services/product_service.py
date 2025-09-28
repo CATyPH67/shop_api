@@ -1,30 +1,34 @@
 from fastapi import HTTPException, status
 from app.repositories.product_repository import ProductRepository
+from app.repositories.size_repository import SizeRepository
+from app.repositories.category_repository import CategoryRepository
 from app.pydantic_models import PaginatedProducts, PaginationMeta, ProductIn, ProductOut
 from app.config.logging_config import logger
 from fastapi_cache.decorator import cache
 from app.config.cache_config import key_builder
 
 class ProductService:
-    def __init__(self, repo: ProductRepository):
-        self.repo = repo
+    def __init__(self, prodRepo: ProductRepository, sizeRepo: SizeRepository, categRepo: CategoryRepository):
+        self.prodRepo = prodRepo
+        self.sizeRepo = sizeRepo
+        self.categRepo = categRepo
 
     async def create_product(self, product_data: ProductIn) -> ProductOut:
         logger.info("Attempting to create product", extra={"extra_fields": product_data.dict()})
 
-        size = await self.repo.get_size_by_id(product_data.size_id)
+        size = await self.sizeRepo.get_size_by_id(product_data.size_id)
         if not size:
             logger.exception("Size not found", extra={"extra_fields": {"size_id": product_data.size_id}})
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Size not found")
 
-        categories = await self.repo.get_categories_by_ids(product_data.category_ids)
+        categories = await self.categRepo.get_categories_by_ids(product_data.category_ids)
         if len(categories) != len(product_data.category_ids):
             missing = set(product_data.category_ids) - {c.id for c in categories}
             logger.exception("Categories not found", extra={"extra_fields": {"missing_category_ids": missing}})
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Categories not found")
 
         try:
-            product_full = await self.repo.create_product(
+            product_full = await self.prodRepo.create_product(
                 name=product_data.name,
                 description=product_data.description,
                 image=product_data.image,
@@ -59,7 +63,7 @@ class ProductService:
         offset: int,
     ) -> PaginatedProducts:
         try:
-            prods, has_next = await self.repo.get_filtered(
+            prods, has_next = await self.prodRepo.get_filtered(
                 category_id, min_price, max_price, sort, limit, offset
             )
         except Exception:
@@ -92,7 +96,7 @@ class ProductService:
             extra={"extra_fields": {"product_id": product_id}}
         )
 
-        p = await self.repo.get_by_id(product_id)
+        p = await self.prodRepo.get_product_joined(product_id)
         if not p:
             logger.warning(
                 "Product not found",

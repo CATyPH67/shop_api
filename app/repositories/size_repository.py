@@ -10,3 +10,7 @@ class SizeRepository:
     async def get_all(self) -> list[Size] | None:
         res = await self.session.execute(select(Size))
         return res.scalars().all()
+    
+    async def get_size_by_id(self, size_id: int) -> Size | None:
+        result = await self.session.execute(select(Size).where(Size.id == size_id))
+        return result.scalar_one_or_none()

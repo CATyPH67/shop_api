@@ -3,6 +3,7 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.config.rate_limits_config import limit
 from app.db.database import get_session
+from app.dependencies.products_dependencies import get_product_service
 from app.repositories.product_repository import ProductRepository
 from app.services.product_service import ProductService
 from app.pydantic_models import PaginatedProducts, ProductIn, ProductOut
@@ -19,10 +20,8 @@ router = APIRouter(prefix="", tags=["products"])
 )
 async def create_product(
     payload: ProductIn,
-    session: AsyncSession = Depends(get_session),
+    service: ProductService = Depends(get_product_service),
 ):
-    repo = ProductRepository(session)
-    service = ProductService(repo)
     return await service.create_product(payload)
 
 
@@ -38,15 +37,11 @@ async def get_products(
     sort: Optional[str] = Query(None),
     limit: int = Query(10, ge=1, le=settings.LIMIT_MAXIMUM),
     offset: int = Query(0, ge=0),
-    session: AsyncSession = Depends(get_session),
+    service: ProductService = Depends(get_product_service),
 ):
-    repo = ProductRepository(session)
-    service = ProductService(repo)
     return await service.get_products(category_id, min_price, max_price, sort, limit, offset)
 
 
 @router.get("/product/{product_id}", response_model=ProductOut, dependencies=[Depends(limit("OFTEN"))])
-async def get_product(product_id: int, session: AsyncSession = Depends(get_session)):
-    repo = ProductRepository(session)
-    service = ProductService(repo)
+async def get_product(product_id: int, service: ProductService = Depends(get_product_service)):
     return await service.get_product(product_id)

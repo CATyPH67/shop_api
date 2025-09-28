@@ -18,3 +18,7 @@ class CategoryRepository:
         categories = categories[:limit]
 
         return categories, has_next
+    
+    async def get_categories_by_ids(self, category_ids: list[int]) -> list[Category]:
+        result = await self.session.execute(select(Category).where(Category.id.in_(category_ids)))
+        return result.scalars().all()

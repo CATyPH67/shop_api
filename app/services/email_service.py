@@ -1,21 +1,7 @@
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
-from app.config.settings_config import settings
+from app.config.smtp_config import connection_config
 from pydantic import EmailStr
 from app.config.logging_config import logger
-
-
-conf = ConnectionConfig(
-    MAIL_USERNAME=settings.SMTP_USER,
-    MAIL_PASSWORD=settings.SMTP_PASSWORD,
-    MAIL_FROM=settings.EMAILS_FROM_EMAIL,
-    MAIL_PORT=settings.SMTP_PORT,
-    MAIL_SERVER=settings.SMTP_HOST,
-    MAIL_FROM_NAME=settings.EMAILS_FROM_NAME,
-    MAIL_STARTTLS=False,
-    MAIL_SSL_TLS=False,
-    USE_CREDENTIALS=False,
-    VALIDATE_CERTS=False
-)
 
 
 async def send_email(to: EmailStr, subject: str, html_content: str):
@@ -25,7 +11,7 @@ async def send_email(to: EmailStr, subject: str, html_content: str):
         body=html_content,
         subtype="html",
     )
-    fm = FastMail(conf)
+    fm = FastMail(connection_config)
 
     try:
         logger.info(
